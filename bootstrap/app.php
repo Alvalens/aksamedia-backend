@@ -13,12 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->api(prepend: [
-            EnsureFrontendRequestsAreStateful::class,
-            'throttle:api',
-            // 'auth:sanctum',
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
-        ]);
+        $middleware->statefulApi();
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
