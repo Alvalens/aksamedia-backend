@@ -35,48 +35,74 @@ class NilaiController extends Controller
 
     public function getNilaiST()
     {
-        $weights = [
-            44 => 41.67,
-            45 => 29.67,
-            46 => 100,
-            47 => 23.81,
+        $select = [
+            'nama',
+            'nisn',
+            DB::raw("
+            SUM(
+                CASE
+                    WHEN pelajaran_id = 44 THEN skor * 41.67
+                    WHEN pelajaran_id = 45 THEN skor * 29.67
+                    WHEN pelajaran_id = 46 THEN skor * 100
+                    WHEN pelajaran_id = 47 THEN skor * 23.81
+                    ELSE 0
+                END
+            ) as total_nilai
+        ")
         ];
 
-        $nilais = DB::table('nilai')
-        ->where('materi_uji_id', 4)
+        $nilaiST = DB::table('nilai')
+            ->select($select)
+            ->where('materi_uji_id', 4)
+            ->groupBy('nama', 'nisn')
+            ->orderByDesc('total_nilai')
             ->get();
 
-        $grouped = $nilais->groupBy(function ($item) {
-            return $item->nama . '|' . $item->nisn;
-        });
+        dd($nilaiST);
 
-        $result = [];
-
-        foreach ($grouped as $group) {
-            list($nama, $nisn) = explode('|', $group->first()->nama . '|' . $group->first()->nisn);
-            $listnilai = [];
-            $total_nilai = 0;
-
-            foreach ($group as $item) {
-                if (isset($weights[$item->pelajaran_id])) {
-                    $nilai = $item->skor * $weights[$item->pelajaran_id];
-                    $listnilai[$item->nama_pelajaran] = round($nilai, 2);
-
-                    $total_nilai += $nilai;
-                }
-            }
-
-            $result[] = [
-                'listnilai' => $listnilai,
-                'nama' => $nama,
-                'nisn' => $nisn,
-                'total_nilai' => round($total_nilai, 2),
-            ];
-        }
-        
-        dd($result);
-
-        return response()->json($result);
+        return response()->json($nilaiST);
     }
+
+    // public function getNilaiST()
+    // {
+    //     $weights = [
+    //         44 => 41.67,
+    //         45 => 29.67,
+    //         46 => 100,
+    //         47 => 23.81,
+    //     ];
+
+    //     $nilaiRecords = DB::table('nilai')
+    //     ->where('materi_uji_id', 4)
+    //     ->get();
+
+    //     $grouped = $nilaiRecords->groupBy('nisn');
+    //     $result = [];
+
+    //     foreach ($grouped as $nisn => $group) {
+    //         $nama = $group->first()->nama;
+
+    //         $listnilai = [];
+    //         $total_nilai = 0;
+
+    //         foreach ($group as $item) {
+    //             if (isset($weights[$item->pelajaran_id])) {
+    //                 $nilai = round($item->skor * $weights[$item->pelajaran_id], 2);
+    //                 $listnilai[$item->nama_pelajaran] = $nilai;
+    //                 $total_nilai += $nilai;
+    //             }
+    //         }
+
+    //         $result[] = [
+    //             'nama' => $nama,
+    //             'nisn' => $nisn,
+    //             'listnilai' => $listnilai,
+    //             'total_nilai' => round($total_nilai, 2),
+    //         ];
+    //     }
+    //     dd($result);
+
+    //     return response()->json($result);
+    // }
 
 }
